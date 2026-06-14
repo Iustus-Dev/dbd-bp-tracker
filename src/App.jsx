@@ -73,7 +73,8 @@ function App() {
 
       if (!response.ok) throw new Error('Failed to delete match')
       
-      setMatches((prev) => prev.filter((m) => m.id !== id))
+      // Use loose inequality (!=) to match backend logic and handle potential type mismatches
+      setMatches((prev) => prev.filter((m) => m.id != id))
     } catch (err) {
       alert(`Error: ${err.message}`)
     }

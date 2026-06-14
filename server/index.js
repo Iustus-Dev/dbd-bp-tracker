@@ -80,7 +80,9 @@ app.post('/api/matches', (req, res) => {
 app.delete('/api/matches/:id', (req, res) => {
   const { id } = req.params;
   const matches = readMatches();
-  const filteredMatches = matches.filter(m => m.id !== id);
+  
+  // Use loose inequality (!=) to handle cases where id might be stored as a number
+  const filteredMatches = matches.filter(m => m.id != id);
 
   if (matches.length === filteredMatches.length) {
     return res.status(404).json({ error: 'Match not found' });

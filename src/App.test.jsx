@@ -70,4 +70,40 @@ describe('App Component', () => {
     const newCharCell = await screen.findByText(/Meg Thomas/i)
     expect(newCharCell).toBeInTheDocument()
   })
+
+  it('deletes a match and updates history', async () => {
+    const mockMatches = [
+      { id: '123', character: 'Wraith', bloodpoints: 15000, timestamp: new Date().toISOString() }
+    ]
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockMatches,
+    })
+
+    // Mock window.confirm
+    const confirmSpy = vi.spyOn(window, 'confirm').mockImplementation(() => true)
+
+    fetch.mockResolvedValueOnce({
+      ok: true,
+    })
+
+    render(<App />)
+    
+    const charCell = await screen.findByText(/Wraith/i)
+    expect(charCell).toBeInTheDocument()
+
+    const deleteBtn = screen.getByText(/Delete/i)
+    fireEvent.click(deleteBtn)
+
+    expect(confirmSpy).toHaveBeenCalled()
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/api/matches/123'), expect.objectContaining({
+      method: 'DELETE'
+    }))
+
+    await vi.waitFor(() => {
+      expect(screen.queryByText(/Wraith/i)).not.toBeInTheDocument()
+    })
+
+    confirmSpy.mockRestore()
+  })
 })
