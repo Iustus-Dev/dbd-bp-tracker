@@ -50,19 +50,21 @@ app.get('/api/matches', (req, res) => {
 /**
  * POST /api/matches
  * Stores a new match round
- * Body: { character: string, bloodpoints: number }
+ * Body: { character: string, bloodpoints: number, role: 'survivor' | 'killer', isEvent: boolean }
  */
 app.post('/api/matches', (req, res) => {
-  const { character, bloodpoints } = req.body;
+  const { character, bloodpoints, role, isEvent } = req.body;
 
-  if (!character || bloodpoints === undefined) {
-    return res.status(400).json({ error: 'Missing character or bloodpoints' });
+  if (!character || bloodpoints === undefined || !role) {
+    return res.status(400).json({ error: 'Missing character, bloodpoints, or role' });
   }
 
   const newMatch = {
     id: uuidv4(),
     character,
     bloodpoints: Number(bloodpoints),
+    role,
+    isEvent: !!isEvent,
     timestamp: new Date().toISOString()
   };
 

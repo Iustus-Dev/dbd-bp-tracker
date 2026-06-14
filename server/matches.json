@@ -3,6 +3,16 @@
     "id": "bf2a204c-ee06-479b-bbcb-cb1898dd7385",
     "character": "Spirit",
     "bloodpoints": 214213,
+    "role": "killer",
+    "isEvent": false,
     "timestamp": "2026-06-14T15:46:21.035Z"
+  },
+  {
+    "id": "704c5020-654f-4af9-b754-83a6acfa8767",
+    "character": "Spirit ",
+    "bloodpoints": 1200000,
+    "role": "killer",
+    "isEvent": false,
+    "timestamp": "2026-06-14T17:55:40.516Z"
   }
 ]

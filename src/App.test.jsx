@@ -18,7 +18,7 @@ describe('App Component', () => {
     })
 
     render(<App />)
-    expect(screen.getByText(/Match History Tracker/i)).toBeInTheDocument()
+    expect(screen.getByText(/Trial Logs/i)).toBeInTheDocument()
   })
 
   it('shows loading state initially', async () => {
@@ -29,7 +29,7 @@ describe('App Component', () => {
 
   it('displays matches fetched from API', async () => {
     const mockMatches = [
-      { id: '1', character: 'The Trapper', bloodpoints: 25000, timestamp: new Date().toISOString() }
+      { id: '1', character: 'The Trapper', bloodpoints: 25000, role: 'killer', isEvent: false, timestamp: new Date().toISOString() }
     ]
     fetch.mockResolvedValueOnce({
       ok: true,
@@ -41,12 +41,16 @@ describe('App Component', () => {
     expect(characterCell).toBeInTheDocument()
     const bpElements = screen.getAllByText(/25,000/i)
     expect(bpElements.length).toBeGreaterThanOrEqual(1)
+    
+    // Check for role in the table
+    const roles = screen.getAllByText(/killer/i)
+    expect(roles.some(el => el.tagName === 'SPAN')).toBe(true)
   })
 
   it('submits a new match and updates history', async () => {
     fetch.mockResolvedValueOnce({ ok: true, json: async () => [] }) // Initial fetch
     
-    const newMatch = { id: '2', character: 'Meg Thomas', bloodpoints: 32000, timestamp: new Date().toISOString() }
+    const newMatch = { id: '2', character: 'Meg Thomas', bloodpoints: 32000, role: 'survivor', isEvent: true, timestamp: new Date().toISOString() }
     fetch.mockResolvedValueOnce({
       ok: true,
       json: async () => newMatch,
@@ -54,26 +58,31 @@ describe('App Component', () => {
 
     render(<App />)
     
-    const charInput = screen.getByPlaceholderText(/The Trapper, Meg Thomas, etc./i)
-    const bpInput = screen.getByPlaceholderText(/Amount Earned.../i)
-    const submitBtn = screen.getByText(/Add to History/i)
+    const survivorBtn = screen.getByRole('button', { name: /^Survivor$/i })
+    const charInput = screen.getByPlaceholderText(/E.G. DWIGHT FAIRFIELD/i)
+    const bpInput = screen.getByPlaceholderText(/000,000/i)
+    const eventToggle = screen.getByText(/10th Anniversary Event Trial/i)
+    const submitBtn = screen.getByText(/Submit to Entity/i)
 
+    fireEvent.click(survivorBtn)
     fireEvent.change(charInput, { target: { value: 'Meg Thomas' } })
     fireEvent.change(bpInput, { target: { value: '32000' } })
+    fireEvent.click(eventToggle)
     fireEvent.click(submitBtn)
 
     expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/api/matches'), expect.objectContaining({
       method: 'POST',
-      body: JSON.stringify({ character: 'Meg Thomas', bloodpoints: 32000 })
+      body: JSON.stringify({ character: 'Meg Thomas', bloodpoints: 32000, role: 'survivor', isEvent: true })
     }))
 
     const newCharCell = await screen.findByText(/Meg Thomas/i)
     expect(newCharCell).toBeInTheDocument()
+    expect(screen.getByText(/^EVENT$/)).toBeInTheDocument()
   })
 
   it('deletes a match and updates history', async () => {
     const mockMatches = [
-      { id: '123', character: 'Wraith', bloodpoints: 15000, timestamp: new Date().toISOString() }
+      { id: '123', character: 'Wraith', bloodpoints: 15000, role: 'killer', isEvent: false, timestamp: new Date().toISOString() }
     ]
     fetch.mockResolvedValueOnce({
       ok: true,
@@ -85,6 +94,7 @@ describe('App Component', () => {
 
     fetch.mockResolvedValueOnce({
       ok: true,
+      json: async () => ({ message: 'Deleted' })
     })
 
     render(<App />)
@@ -92,7 +102,7 @@ describe('App Component', () => {
     const charCell = await screen.findByText(/Wraith/i)
     expect(charCell).toBeInTheDocument()
 
-    const deleteBtn = screen.getByText(/Delete/i)
+    const deleteBtn = screen.getByText(/Discard/i)
     fireEvent.click(deleteBtn)
 
     expect(confirmSpy).toHaveBeenCalled()
